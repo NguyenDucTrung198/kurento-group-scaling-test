@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="img/kurento.png" type="image/png" />
+
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bower_components/demo-console/index.css">
+    <link rel="stylesheet" href="bower_components/ekko-lightbox/dist/ekko-lightbox.min.css">
+    <link rel="stylesheet" href="css/kurento.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+
+    <script src="bower_components/webrtc-adapter/release/adapter.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/demo-console/index.js"></script>
+    <script src="bower_components/ekko-lightbox/dist/ekko-lightbox.min.js"></script>
+
+    <script src="bower_components/kurento-utils/js/kurento-utils.js"></script>
+
+    <script src="js/index.js"></script>
+    <title>Kurento Tutorial 3: Video Call 1 to N with WebRTC</title>
+  </head>
+  <body>
+
+    <header>
+      <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"></button>
+            <a class="navbar-brand" href=".">Kurento Tutorial</a>
+          </div>
+          <div class="collapse navbar-collapse"
+            id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+              <li>
+                <a href="https://github.com/Kurento/kurento-tutorial-node/tree/master/kurento-one2many-call">
+                  <span class="glyphicon glyphicon-file"></span> Source Code</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="page-header">
+        <h1>Tutorial 3: Video Call Many to Many with WebRTC</h1>
+      </div>
+      <div class="row" style="display: flex;">
+        <div class="col-md-6">
+          <div class="col-md-12" width="560px" style="padding-left: 0px;">
+            <input type="text" class="input" name="room" value="room1" id="roomName" placeholder="Room" required>
+            <a id="call" href="#" class="btn btn-success">
+              <span class="glyphicon glyphicon-play"></span> Register</a>
+            <a id="viewer" href="#" class="btn btn-primary" >
+              <span class="glyphicon glyphicon-user"></span> Viewer</a>
+            <a id="terminate" href="#" class="btn btn-danger">
+              <span class="glyphicon glyphicon-stop"></span> Stop</a>
+          </div>
+          <div id="videoBig" style="margin-top: 50px;width: 560px;height: 422px;">
+            <video id="video" autoplay height="422px" poster="img/webrtc.png"></video>
+          </div>
+          <div class="col-md-12" style="padding-left: 0px;">
+            <br/>
+            <label class="control-label" for="console">Console</label><br><br>
+            <div id="console" style="width: 560px;" class="democonsole">
+              <ul></ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="row">
+            <div class="col-md-12" style="margin-top: 50px;border: 1px solid gray;position: relative;">
+              <div class="mesgs" style="width: 100%;">
+                <div class="msg_history">
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test which is a new approach to have all
+                          solutions</p>
+                        <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Test which is a new approach to have all
+                        solutions</p>
+                      <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test, which is a new approach to have</p>
+                        <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Apollo University, Delhi, India Test</p>
+                      <span class="time_date"> 11:01 AM    |    Today</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>We work directly with our designers and suppliers,
+                          and sell direct to you, which means quality, exclusive
+                          products, at a price anyone can afford.</p>
+                        <span class="time_date"> 11:01 AM    |    Today</span></div>
+                    </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test which is a new approach to have all
+                          solutions</p>
+                        <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Test which is a new approach to have all
+                        solutions</p>
+                      <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test, which is a new approach to have</p>
+                        <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Apollo University, Delhi, India Test</p>
+                      <span class="time_date"> 11:01 AM    |    Today</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>We work directly with our designers and suppliers,
+                          and sell direct to you, which means quality, exclusive
+                          products, at a price anyone can afford.</p>
+                        <span class="time_date"> 11:01 AM    |    Today</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="type_msg">
+                  <div class="input_msg_write" style="border: 0px;">
+                    <!-- <input type="text" class="write_msg" placeholder="Type a message" /> -->
+                    <input type="text" class="input" placeholder="Type a message" style="width: 92%;height: 50px;border-radius: 20px;outline: 0px solid #eff4f7;">
+                    <button style="margin-top: 3px;" class="btn-primary msg_send_btn" type="button"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="foot-fixed-bottom">
+        <div class="container text-center">
+          <hr/>
+          <div class="row">&copy; 2014-2015 Kurento</div>
+          <div class="row">
+            <div class="col-md-4">
+              <a href="http://www.urjc.es">
+                <img src="img/urjc.gif" alt="Universidad Rey Juan Carlos" height="50px"/>
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.kurento.org">
+                <img src="img/kurento.png" alt="Kurento" height="50px"/>
+              </a>
+            </div>
+            <div class="col-md-4">
+              <a href="http://www.naevatec.com">
+                <img src="img/naevatec.png" alt="Naevatec" height="50px"/>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>
