@@ -29,7 +29,9 @@ const subscriber = redis.createClient();
 const puppeteer = require('puppeteer');
 var uuid = require('uuid');
 var viewer_count = 0
+var presenter_count = -1
 var max_viewer_serve = 3
+var max_presenter_serve = 3
 var check_send_stream = false
 
 var argv = minimist(process.argv.slice(2), {
@@ -98,7 +100,9 @@ wss.on('connection', function(ws) {
 		const serve = {
 			id : "serve2",
 			viewer_count : viewer_count,
+			presenter_count : presenter_count,
 			ip: argv.as_uri,
+			rooms: []
 		}
 		publisher.publish("serve2-count", JSON.stringify(serve))
         stop(sessionId);
@@ -112,12 +116,24 @@ wss.on('connection', function(ws) {
         case 'presenter':
 			startPresenter(sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
 				if (error) {
-					return ws.send(JSON.stringify({
-						id : 'presenterResponse',
-						response : 'rejected',
-						message : error
-					}));
+					// return ws.send(JSON.stringify({
+					// 	id : 'presenterResponse',
+					// 	response : 'rejected',
+					// 	message : error
+					// }));
 				}
+				if(presenter_count < max_presenter_serve){
+					presenter_count++;
+					const serve = {
+						id : "serve2",
+						viewer_count : viewer_count,
+						presenter_count : presenter_count,
+						ip: argv.as_uri,
+						rooms: []
+					}
+					publisher.publish("serve2-count", JSON.stringify(serve))
+				}
+
 				ws.send(JSON.stringify({
 					id : 'presenterResponse',
 					response : 'accepted',
@@ -143,7 +159,9 @@ wss.on('connection', function(ws) {
 				const serve = {
 					id : "serve2",
 					viewer_count : viewer_count,
-					ip: argv.as_uri
+					presenter_count : presenter_count,
+					ip: argv.as_uri,
+					rooms: []
 				}
 
 				if(viewer_count == max_viewer_serve && check_send_stream == false){
@@ -650,7 +668,9 @@ function startPresenter(sessionId, ws, sdpOffer, callback) {
 						const serve = {
 							id : "serve2",
 							viewer_count : viewer_count,
-							ip: argv.as_uri
+							presenter_count : presenter_count,
+							ip: argv.as_uri,
+							rooms: []
 						}
 						publisher.publish("serve2-count", JSON.stringify(serve))
                     });

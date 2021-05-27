@@ -79,21 +79,25 @@ function nextUniqueId() {
 var serve1_info = {
 	id : "serve1",
 	viewer_count : 0,
+	presenter_count : 0,
 	ip: argv.as_uri,
 	rooms: []
 }
 var serve2_info = {
 	id : "",
 	viewer_count : 0,
+	presenter_count : 0,
 	ip: '',
 	rooms: []
 }
 var serve3_info = {
 	id : "",
 	viewer_count : 0,
+	presenter_count : 0,
 	ip: '',
 }
 var max_viewer_serve = 3
+var max_presenter_serve = 3
 var check_send_stream = false
 
 
@@ -134,6 +138,13 @@ wss.on('connection', function (ws) {
 						// 	message: error
 						// }));
 					}
+					if(serve1_info.presenter_count < max_presenter_serve){
+						serve1_info.presenter_count++;
+					}
+					console.log("click presenter");
+					console.log(serve1_info);
+					console.log(serve2_info);
+
 					if(check_send_stream == false){
 						setTimeout(() => {
 							console.log("~~~~~~~~~~~~~~~~~~ call on test ~~~~~~~~~~~~~~~~~~`")
@@ -166,14 +177,6 @@ wss.on('connection', function (ws) {
 					console.log("click viewer");
 					console.log(serve1_info);
 					console.log(serve2_info);
-					// if(serve1_info.viewer_count == max_viewer_serve && check_send_stream == false){
-						// setTimeout(() => {
-						// 	console.log("~~~~~~~~~~~~~~~~~~ call on test ~~~~~~~~~~~~~~~~~~`")
-						// serve1_info.viewer_count--;
-						// check_send_stream = true;
-						// 	getCandidate();
-						// }, 1000);
-					// }
 
 					ws.send(JSON.stringify({
 						id: 'viewerResponse',
@@ -373,7 +376,7 @@ async function getCandidate() {
 				const stream =  e.detail.stream;
 				presenter(stream);
 			});
-			var ws = new WebSocket('wss://192.168.1.25:9000/one2many');
+			var ws = new WebSocket('wss://192.168.0.118:9000/one2many');
 			var webRtcPeer;
 
 			window.onbeforeunload = function () {
@@ -585,8 +588,8 @@ function onIceCandidate(sessionId, _candidate) {
 	}
 }
 
-app.get('/test', (request, response) => {
-	console.log("call api");
+app.get('/viewer', (request, response) => {
+	console.log("call api viewer");
 	console.log(serve1_info);
 	console.log(serve2_info);
 	if(serve1_info.viewer_count < max_viewer_serve){
@@ -602,6 +605,23 @@ app.get('/test', (request, response) => {
 	}
 });
 
+app.get('/presenter', (request, response) => {
+	console.log("call api presenter");
+	console.log(serve1_info);
+	console.log(serve2_info);
+	if(serve1_info.presenter_count < max_presenter_serve){
+		response.send(serve1_info);
+	}else{
+		if(serve2_info.presenter_count < max_presenter_serve){
+			// serve1_info.presenter_count++
+			response.send(serve2_info);
+		}else{
+			// serve1_info.presenter_count++
+			response.send(serve3_info);
+		}
+	}
+});
+
 subscriber.subscribe("serve2-count");
 subscriber.subscribe("serve3-count");
 subscriber.subscribe("iceCandidate");
@@ -609,7 +629,7 @@ subscriber.subscribe("presenterResponse");
 subscriber.on("message", async function (channel, message) {
 	switch (channel) {
 		case 'presenterResponse':
-			console.log("presenterResponse")
+			// console.log("presenterResponse")
 			presenter.webRtcEndpoint.processAnswer(message);
 			break;
 		case 'iceCandidate':

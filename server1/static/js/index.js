@@ -89,36 +89,40 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	function presenter() {
 		if (!webRtcPeer) {
 			$.ajax({
-                url: '/test',
+                url: '/presenter',
                 type: 'GET',
 				dataType: 'json',
 				contentType: "application/json; charset=utf-8",
             }).done(function(resuilt) {
-				console.log(resuilt.rooms)
+				console.log(resuilt)
 				roomNameEle = document.getElementById("roomName");
-				if(resuilt.rooms.indexOf(roomNameEle.value) == -1){
-					document.getElementById("call").style.display = "none";
-					document.getElementById("copyurl").style.display = "inline-block";
-					roomNameEle.setAttribute("readonly", true);
-					roomName = roomNameEle.value
-					roomNameEle.value = `${window.location.host}/index.html?roomid=${roomNameEle.value}`;
-		
-					showSpinner(video);
-					var options = {
-						localVideo: video,
-						onicecandidate: onIceCandidate
+				if(window.location.href.includes(resuilt.ip)){
+					if(resuilt.rooms.indexOf(roomNameEle.value) == -1){
+						document.getElementById("call").style.display = "none";
+						document.getElementById("copyurl").style.display = "inline-block";
+						roomNameEle.setAttribute("readonly", true);
+						roomName = roomNameEle.value
+						roomNameEle.value = `${window.location.host}/index.html?roomid=${roomNameEle.value}`;
+			
+						showSpinner(video);
+						var options = {
+							localVideo: video,
+							onicecandidate: onIceCandidate
+						}
+			
+						webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
+							if (error) return onError(error);
+							this.generateOffer(onOfferPresenter);
+						});
+					}else{
+						document.getElementById("room_err").innerHTML = 'Room already exists!';
+						document.getElementById("room_err").style.display = "inline-block";
+						setTimeout(() => {
+							document.getElementById("room_err").style.display = "none";
+						}, 2000);
 					}
-		
-					webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
-						if (error) return onError(error);
-						this.generateOffer(onOfferPresenter);
-					});
 				}else{
-					document.getElementById("room_err").innerHTML = 'Room already exists!';
-					document.getElementById("room_err").style.display = "inline-block";
-					setTimeout(() => {
-						document.getElementById("room_err").style.display = "none";
-					}, 2000);
+					location.replace(resuilt.ip)
 				}
             });
 		}
@@ -149,11 +153,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	function viewer() {
 		if (!webRtcPeer) {
 			$.ajax({
-                url: '/test',
+                url: '/viewer',
                 type: 'GET',
 				dataType: 'json',
 				contentType: "application/json; charset=utf-8",
             }).done(function(resuilt) {
+				console.log(resuilt)
 				if(window.location.href.includes(resuilt.ip)){
 					if(resuilt.rooms.indexOf(roomName) != -1){
 						showSpinner(video);
@@ -173,7 +178,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 						document.getElementById("room_err").innerHTML = roomName + ' Does not exist';
 					}
 				}else{
-					location.replace(resuilt.ip)
+					location.replace(`${resuilt.ip}/index.html?roomid=${roomName}`)
 				}
             });
 		}

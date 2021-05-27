@@ -28,11 +28,12 @@ const publisher = redis.createClient();
 const subscriber = redis.createClient();
 var uuid = require('uuid');
 var viewer_count = 0
+var presenter_count = -1
 
 var argv = minimist(process.argv.slice(2), {
     default: {
-        as_uri: 'https://192.168.1.25:10000',
-        ws_uri: 'ws://192.168.1.25:8888/kurento'
+        as_uri: 'https://192.168.0.118:10000',
+        ws_uri: 'ws://192.168.0.118:8888/kurento'
     }
 });
 
@@ -91,13 +92,6 @@ wss.on('connection', function(ws) {
 
     ws.on('close', function() {
         console.log('Connection ' + sessionId + ' closed');
-		// viewer_count--;
-		// const serve = {
-		// 	id : "serve3",
-		// 	viewer_count : viewer_count,
-		// 	ip: argv.as_uri
-		// }
-		// publisher.publish("serve2-count", JSON.stringify(serve))
         stop(sessionId);
     });
 
@@ -109,12 +103,23 @@ wss.on('connection', function(ws) {
         case 'presenter':
 			startPresenter(sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
 				if (error) {
-					return ws.send(JSON.stringify({
-						id : 'presenterResponse',
-						response : 'rejected',
-						message : error
-					}));
+					// return ws.send(JSON.stringify({
+					// 	id : 'presenterResponse',
+					// 	response : 'rejected',
+					// 	message : error
+					// }));
 				}
+
+				presenter_count++;
+				const serve = {
+					id : "serve3",
+					viewer_count : viewer_count,
+					presenter_count : presenter_count,
+					ip: argv.as_uri,
+					rooms: []
+				}
+				publisher.publish("serve3-count", JSON.stringify(serve))
+
 				ws.send(JSON.stringify({
 					id : 'presenterResponse',
 					response : 'accepted',
@@ -138,7 +143,9 @@ wss.on('connection', function(ws) {
 				const serve = {
 					id : "serve3",
 					viewer_count : viewer_count,
-					ip: argv.as_uri
+					presenter_count : presenter_count,
+					ip: argv.as_uri,
+					rooms: []
 				}
 				publisher.publish("serve3-count", JSON.stringify(serve))
 
@@ -500,7 +507,9 @@ function startPresenter(sessionId, ws, sdpOffer, callback) {
 						const serve = {
 							id : "serve3",
 							viewer_count : viewer_count,
-							ip: argv.as_uri
+							presenter_count : presenter_count,
+							ip: argv.as_uri,
+							rooms: []
 						}
 						publisher.publish("serve3-count", JSON.stringify(serve))
                     });
