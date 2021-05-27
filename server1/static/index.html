@@ -54,16 +54,21 @@
       <div class="row" style="display: flex;">
         <div class="col-md-6">
           <div class="col-md-12" width="560px" style="padding-left: 0px;">
-            <input type="text" class="input" name="room" value="room1" id="roomName" placeholder="Room" required>
+            <input type="text" class="input" name="room" style="width: 60%;" value="room1" id="roomName" placeholder="Room" required>
             <a id="call" href="#" class="btn btn-success">
               <span class="glyphicon glyphicon-play"></span> Register</a>
-            <a id="viewer" href="#" class="btn btn-primary" >
+            <a id="copyurl" href="#" class="btn btn-primary" style="display: none;">
+              <span class="fa fa-copy"></span> Copy Url</a>
+            <a id="viewer" href="#" class="btn btn-primary" style="display: none;">
               <span class="glyphicon glyphicon-user"></span> Viewer</a>
             <a id="terminate" href="#" class="btn btn-danger">
               <span class="glyphicon glyphicon-stop"></span> Stop</a>
           </div>
-          <div id="videoBig" style="margin-top: 50px;width: 560px;height: 422px;">
-            <video id="video" autoplay height="422px" poster="img/webrtc.png"></video>
+          <div class="col-md-12 alert alert-danger" style="margin-top: 10px;display: none;" id="room_err">
+            <strong>Room already exists!</strong>
+          </div>
+          <div id="videoBig" class="col-md-12" style="margin-top: 10px;width: 560px;height: 422px;padding: 0px;">
+            <video id="video" autoplay height="422px" width="560px" poster="img/webrtc.png"></video>
           </div>
           <div class="col-md-12" style="padding-left: 0px;">
             <br/>
@@ -73,7 +78,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6">
+        <div style="display: none;" class="col-md-6">
           <div class="row">
             <div class="col-md-12" style="margin-top: 50px;border: 1px solid gray;position: relative;">
               <div class="mesgs" style="width: 100%;">

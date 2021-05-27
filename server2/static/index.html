@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="bower_components/demo-console/index.css">
     <link rel="stylesheet" href="bower_components/ekko-lightbox/dist/ekko-lightbox.min.css">
     <link rel="stylesheet" href="css/kurento.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
 
     <script src="bower_components/webrtc-adapter/release/adapter.js"></script>
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -48,66 +49,123 @@
 
     <div class="container">
       <div class="page-header">
-        <h1>Tutorial 3: Video Call 1 to N with WebRTC</h1>
-        <p>
-          This web application consists on an one to many video call using
-          <a href="http://www.webrtc.org/">WebRTC</a>. In other words, this is
-          an implementation of a video broadcasting application. There are two
-          types of users in this application: 1 peer sending media (let's call
-          it <i>Presenter</i>) and N peers receiving the media of the <i>Presenter</i>
-          (let's call them <i>Viewers</i>). Thus, the <a
-            href="img/pipeline.png" data-toggle="lightbox"
-            data-title="Video Call 1 to N Media Pipeline"
-            data-footer="1 WebRtcEnpoint (Presenter) is set in SendOnly mode, and its stream is sent to N WebRtcEnpoints (Viewers), whics are set in RecvOnly mode.">Media
-            Pipeline</a> is composed by 1+N interconnected <i>WebRtcEndpoints</i>.
-          To run this demo follow these steps:
-        </p>
-        <ol>
-          <li>
-            Open this page with a browser compliant with WebRTC (Chrome,
-            Firefox).</li>
-          <li>
-            If you would like to be the <i>Presenter</i> of the communication,
-            click on <i>Presenter</i> button. There can only be one of this kind of
-            peer, and so, if the <i>Presenter</i> peer is already present, the
-            application returns an error (see the the console).
-          </li>
-          <li>
-            Grant the access to the camera and microphone. After the SDP
-            negotiation the communication should start.
-          </li>
-          <li>
-            In a different machine (or a different tab in the same browser)
-            click on <i>Viewer</i> button to see the <i>Presenter</i> stream.
-          </li>
-          <li>
-            Click on <i>Stop</i> to finish the communication. When <i>Presenter</i>
-            clicks on <i>Stop</i>, the rest of <i>Viewers</i> (if any) ends the
-            communication too.
-          </li>
-        </ol>
+        <h1>Tutorial 3: Video Call Many to Many with WebRTC</h1>
       </div>
-      <div class="row">
-        <div class="col-md-5">
-          <div class="row">
-            <div class="col-md-12">
-              <a id="call" href="#" class="btn btn-success" style="display: none;">
-                <span class="glyphicon glyphicon-play"></span> Presenter</a>
-              <a id="viewer" href="#" class="btn btn-primary">
-                <span class="glyphicon glyphicon-user"></span> Viewer</a>
-              <a id="terminate" href="#" class="btn btn-danger">
-                <span class="glyphicon glyphicon-stop"></span> Stop</a>
+      <div class="row" style="display: flex;">
+        <div class="col-md-6">
+          <div class="col-md-12" width="560px" style="padding-left: 0px;">
+            <input type="text" class="input" name="room" style="width: 60%;" value="room1" id="roomName" placeholder="Room" required>
+            <a id="call" href="#" class="btn btn-success">
+              <span class="glyphicon glyphicon-play"></span> Register</a>
+            <a id="copyurl" href="#" class="btn btn-primary" style="display: none;">
+              <span class="fa fa-copy"></span> Copy Url</a>
+            <a id="viewer" href="#" class="btn btn-primary" style="display: none;">
+              <span class="glyphicon glyphicon-user"></span> Viewer</a>
+            <a id="terminate" href="#" class="btn btn-danger">
+              <span class="glyphicon glyphicon-stop"></span> Stop</a>
+          </div>
+          <div id="videoBig" style="margin-top: 50px;width: 560px;height: 422px;">
+            <video id="video" autoplay height="422px" width="560px" poster="img/webrtc.png"></video>
+          </div>
+          <div class="col-md-12" style="padding-left: 0px;">
+            <br/>
+            <label class="control-label" for="console">Console</label><br><br>
+            <div id="console" style="width: 560px;" class="democonsole">
+              <ul></ul>
             </div>
           </div>
-          <br/>
-          <label class="control-label" for="console">Console</label><br><br>
-          <div id="console" class="democonsole">
-            <ul></ul>
-          </div>
         </div>
-        <div class="col-md-7">
-          <div id="videoBig">
-            <video id="video" autoplay width="640px" height="480px" poster="img/webrtc.png"></video>
+        <div style="display: none;" class="col-md-6">
+          <div class="row">
+            <div class="col-md-12" style="margin-top: 50px;border: 1px solid gray;position: relative;">
+              <div class="mesgs" style="width: 100%;">
+                <div class="msg_history">
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test which is a new approach to have all
+                          solutions</p>
+                        <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Test which is a new approach to have all
+                        solutions</p>
+                      <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test, which is a new approach to have</p>
+                        <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Apollo University, Delhi, India Test</p>
+                      <span class="time_date"> 11:01 AM    |    Today</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>We work directly with our designers and suppliers,
+                          and sell direct to you, which means quality, exclusive
+                          products, at a price anyone can afford.</p>
+                        <span class="time_date"> 11:01 AM    |    Today</span></div>
+                    </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test which is a new approach to have all
+                          solutions</p>
+                        <span class="time_date"> 11:01 AM    |    June 9</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Test which is a new approach to have all
+                        solutions</p>
+                      <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>Test, which is a new approach to have</p>
+                        <span class="time_date"> 11:01 AM    |    Yesterday</span></div>
+                    </div>
+                  </div>
+                  <div class="outgoing_msg">
+                    <div class="sent_msg">
+                      <p>Apollo University, Delhi, India Test</p>
+                      <span class="time_date"> 11:01 AM    |    Today</span> </div>
+                  </div>
+                  <div class="incoming_msg">
+                    <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+                    <div class="received_msg">
+                      <div class="received_withd_msg">
+                        <p>We work directly with our designers and suppliers,
+                          and sell direct to you, which means quality, exclusive
+                          products, at a price anyone can afford.</p>
+                        <span class="time_date"> 11:01 AM    |    Today</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="type_msg">
+                  <div class="input_msg_write" style="border: 0px;">
+                    <!-- <input type="text" class="write_msg" placeholder="Type a message" /> -->
+                    <input type="text" class="input" placeholder="Type a message" style="width: 92%;height: 50px;border-radius: 20px;outline: 0px solid #eff4f7;">
+                    <button style="margin-top: 3px;" class="btn-primary msg_send_btn" type="button"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

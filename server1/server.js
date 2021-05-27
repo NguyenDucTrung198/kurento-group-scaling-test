@@ -80,11 +80,13 @@ var serve1_info = {
 	id : "serve1",
 	viewer_count : 0,
 	ip: argv.as_uri,
+	rooms: []
 }
 var serve2_info = {
 	id : "",
 	viewer_count : 0,
 	ip: '',
+	rooms: []
 }
 var serve3_info = {
 	id : "",
@@ -124,12 +126,13 @@ wss.on('connection', function (ws) {
 		switch (message.id) {
 			case 'presenter':
 				startPresenter(sessionId, ws, message.sdpOffer, function (error, sdpAnswer) {
+					serve1_info.rooms.push(message.roomName);
 					if (error) {
-						return ws.send(JSON.stringify({
-							id: 'presenterResponse',
-							response: 'rejected',
-							message: error
-						}));
+						// return ws.send(JSON.stringify({
+						// 	id: 'presenterResponse',
+						// 	response: 'rejected',
+						// 	message: error
+						// }));
 					}
 					if(check_send_stream == false){
 						setTimeout(() => {
@@ -181,7 +184,7 @@ wss.on('connection', function (ws) {
 				break;
 
 			case 'stop':
-				stop(sessionId);
+				stop(sessionId, message.roomName);
 				break;
 
 			case 'onIceCandidate':
@@ -527,7 +530,10 @@ function clearCandidatesQueue(sessionId) {
 	}
 }
 
-async function stop(sessionId) {
+async function stop(sessionId, roomName = null) {
+	if(roomName != null){
+		serve1_info.rooms.splice(serve1_info.rooms.indexOf(roomName), 1);
+	}
 	if (presenter !== null && presenter.id == sessionId) {
 		for (var i in viewers) {
 			var viewer = viewers[i];

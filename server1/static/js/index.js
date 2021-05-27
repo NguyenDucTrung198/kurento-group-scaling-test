@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	var ws = new WebSocket('wss://' + location.host + '/one2many');
 	var video;
 	var webRtcPeer;
+	var roomName = ''
 
 	window.onload = function () {
 		console = new Console();
@@ -26,6 +27,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		document.getElementById('call').addEventListener('click', function () { presenter(); });
 		document.getElementById('viewer').addEventListener('click', function () { viewer(); });
 		document.getElementById('terminate').addEventListener('click', function () { stop(); });
+		document.getElementById('copyurl').addEventListener('click', function () { copyUrl(); });
+
+		const urlParams = new URLSearchParams(window.location.search);
+		const roomid = urlParams.get('roomid');
+		if(roomid && roomid != ""){
+			document.getElementById("call").style.display = "none";
+			document.getElementById("terminate").style.display = "none";
+			document.getElementById("roomName").style.display = "none";
+			roomName = roomid
+			viewer();
+		}
 	}
 
 	window.onbeforeunload = function () {
@@ -76,17 +88,51 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 	function presenter() {
 		if (!webRtcPeer) {
-			showSpinner(video);
-			var options = {
-				localVideo: video,
-				onicecandidate: onIceCandidate
-			}
-
-			webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
-				if (error) return onError(error);
-				this.generateOffer(onOfferPresenter);
-			});
+			$.ajax({
+                url: '/test',
+                type: 'GET',
+				dataType: 'json',
+				contentType: "application/json; charset=utf-8",
+            }).done(function(resuilt) {
+				console.log(resuilt.rooms)
+				roomNameEle = document.getElementById("roomName");
+				if(resuilt.rooms.indexOf(roomNameEle.value) == -1){
+					document.getElementById("call").style.display = "none";
+					document.getElementById("copyurl").style.display = "inline-block";
+					roomNameEle.setAttribute("readonly", true);
+					roomName = roomNameEle.value
+					roomNameEle.value = `${window.location.host}/index.html?roomid=${roomNameEle.value}`;
+		
+					showSpinner(video);
+					var options = {
+						localVideo: video,
+						onicecandidate: onIceCandidate
+					}
+		
+					webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
+						if (error) return onError(error);
+						this.generateOffer(onOfferPresenter);
+					});
+				}else{
+					document.getElementById("room_err").innerHTML = 'Room already exists!';
+					document.getElementById("room_err").style.display = "inline-block";
+					setTimeout(() => {
+						document.getElementById("room_err").style.display = "none";
+					}, 2000);
+				}
+            });
 		}
+	}
+
+	function copyUrl() {
+		roomNameEle = document.getElementById("roomName");
+		roomNameEle.focus();
+		roomNameEle.select();
+		document.execCommand("copy");
+		document.getElementById("copyurl").innerHTML = 'Copied';
+		setTimeout(() => {
+			document.getElementById("copyurl").innerHTML = '<span class="fa fa-copy"></span> Copy Url';
+		}, 500);
 	}
 
 	function onOfferPresenter(error, offerSdp) {
@@ -94,7 +140,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 		var message = {
 			id: 'presenter',
-			sdpOffer: offerSdp
+			sdpOffer: offerSdp,
+			roomName : roomName
 		};
 		sendMessage(message);
 	}
@@ -108,18 +155,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
 				contentType: "application/json; charset=utf-8",
             }).done(function(resuilt) {
 				if(window.location.href.includes(resuilt.ip)){
-					showSpinner(video);
+					if(resuilt.rooms.indexOf(roomName) != -1){
+						showSpinner(video);
 
-					var options = {
-						remoteVideo: video,
-						onicecandidate: onIceCandidate
+						var options = {
+							remoteVideo: video,
+							onicecandidate: onIceCandidate
+						}
+
+						webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
+							if (error) return onError(error);
+
+							this.generateOffer(onOfferViewer);
+						});
+					}else{
+						document.getElementById("room_err").style.display = "inline-block";
+						document.getElementById("room_err").innerHTML = roomName + ' Does not exist';
 					}
-
-					webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
-						if (error) return onError(error);
-
-						this.generateOffer(onOfferViewer);
-					});
 				}else{
 					location.replace(resuilt.ip)
 				}
@@ -149,8 +201,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 	function stop() {
 		if (webRtcPeer) {
+			document.getElementById("call").style.display = "inline-block";
+			document.getElementById("copyurl").style.display = "none";
 			var message = {
-				id: 'stop'
+				id: 'stop',
+				roomName: roomName
 			}
 			sendMessage(message);
 			dispose();
