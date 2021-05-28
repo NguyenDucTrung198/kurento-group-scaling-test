@@ -73,7 +73,9 @@ var wss = new ws.Server({
 
 function nextUniqueId() {
 	idCounter++;
-	return idCounter.toString();
+	return {
+		'sessionId' : idCounter.toString()
+	}
 }
 
 var serve1_info = {
@@ -95,6 +97,7 @@ var serve3_info = {
 	viewer_count : 0,
 	presenter_count : 0,
 	ip: '',
+	rooms: []
 }
 var max_viewer_serve = 3
 var max_presenter_serve = 3
@@ -107,20 +110,28 @@ var check_send_stream = false
 wss.on('connection', function (ws) {
 
 	var sessionId = nextUniqueId();
-	console.log('Connection received with sessionId ' + sessionId);
+	console.log('Connection received with sessionId ' + sessionId.sessionId);
 
 	ws.on('error', function (error) {
-		console.log('Connection ' + sessionId + ' error');
-		stop(sessionId);
+		console.log('Connection ' + sessionId.sessionId + ' error');
+		stop(sessionId.sessionId);
 	});
 
 	ws.on('close', function () {
-		console.log('Connection ' + sessionId + ' closed');
-		serve1_info.viewer_count--;
-		console.log("close viewer");
-		console.log(serve1_info);
-		console.log(serve2_info);
-		stop(sessionId);
+		console.log('Connection ' + sessionId.sessionId + '-' + sessionId.type + ' closed');
+		if(sessionId.type && sessionId.type == 'viewer'){
+			serve1_info.viewer_count--;
+			console.log("close viewer");
+			console.log(serve1_info);
+			console.log(serve2_info);
+		}
+		if(sessionId.type && sessionId.type == 'presenter'){
+			serve1_info.presenter_count--;
+			console.log("close presenter");
+			console.log(serve1_info);
+			console.log(serve2_info);
+		}
+		stop(sessionId.sessionId);
 	});
 
 	ws.on('message', function (_message) {
@@ -129,7 +140,8 @@ wss.on('connection', function (ws) {
 
 		switch (message.id) {
 			case 'presenter':
-				startPresenter(sessionId, ws, message.sdpOffer, function (error, sdpAnswer) {
+				startPresenter(sessionId.sessionId, ws, message.sdpOffer, function (error, sdpAnswer) {
+					sessionId.type = 'presenter';
 					serve1_info.rooms.push(message.roomName);
 					if (error) {
 						// return ws.send(JSON.stringify({
@@ -163,7 +175,8 @@ wss.on('connection', function (ws) {
 				break;
 
 			case 'viewer':
-				startViewer(sessionId, ws, message.sdpOffer, function (error, sdpAnswer) {
+				startViewer(sessionId.sessionId, ws, message.sdpOffer, function (error, sdpAnswer) {
+					sessionId.type = 'viewer';
 					if (error) {
 						return ws.send(JSON.stringify({
 							id: 'viewerResponse',
@@ -187,11 +200,11 @@ wss.on('connection', function (ws) {
 				break;
 
 			case 'stop':
-				stop(sessionId, message.roomName);
+				stop(sessionId.sessionId, message.roomName);
 				break;
 
 			case 'onIceCandidate':
-				onIceCandidate(sessionId, message.candidate);
+				onIceCandidate(sessionId.sessionId, message.candidate);
 				break;
 
 			default:
@@ -376,7 +389,7 @@ async function getCandidate() {
 				const stream =  e.detail.stream;
 				presenter(stream);
 			});
-			var ws = new WebSocket('wss://192.168.0.118:9000/one2many');
+			var ws = new WebSocket('wss://192.168.1.25:10000/one2many');
 			var webRtcPeer;
 
 			window.onbeforeunload = function () {
@@ -596,10 +609,8 @@ app.get('/viewer', (request, response) => {
 		response.send(serve1_info);
 	}else{
 		if(serve2_info.viewer_count < max_viewer_serve){
-			serve1_info.viewer_count++
 			response.send(serve2_info);
 		}else{
-			serve1_info.viewer_count++
 			response.send(serve3_info);
 		}
 	}
@@ -613,10 +624,8 @@ app.get('/presenter', (request, response) => {
 		response.send(serve1_info);
 	}else{
 		if(serve2_info.presenter_count < max_presenter_serve){
-			// serve1_info.presenter_count++
 			response.send(serve2_info);
 		}else{
-			// serve1_info.presenter_count++
 			response.send(serve3_info);
 		}
 	}

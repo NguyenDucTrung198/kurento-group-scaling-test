@@ -90,6 +90,13 @@ function viewerResponse(message) {
 
 function presenter() {
 	if (!webRtcPeer) {
+		roomNameEle = document.getElementById("roomName");
+		document.getElementById("call").style.display = "none";
+		document.getElementById("copyurl").style.display = "inline-block";
+		roomNameEle.setAttribute("readonly", true);
+		roomName = roomNameEle.value
+		roomNameEle.value = `${window.location.host}/index.html?roomid=${roomNameEle.value}`;
+
 		showSpinner(video);
 
 		var options = {

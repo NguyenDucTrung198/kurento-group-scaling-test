@@ -36,7 +36,7 @@ var check_send_stream = false
 
 var argv = minimist(process.argv.slice(2), {
     default: {
-        as_uri: 'https://192.168.1.25:9000',
+        as_uri: 'https://192.168.1.25:10000',
         ws_uri: 'ws://192.168.1.25:8888/kurento'
     }
 });
@@ -76,7 +76,9 @@ var wss = new ws.Server({
 
 function nextUniqueId() {
 	idCounter++;
-	return idCounter.toString();
+	return {
+		'sessionId' : idCounter.toString()
+	}
 }
 
 
@@ -91,12 +93,11 @@ wss.on('connection', function(ws) {
 
     ws.on('error', function(error) {
         console.log('Connection ' + sessionId + ' error');
-        stop(sessionId);
+        stop(sessionId.sessionId);
     });
 
     ws.on('close', function() {
-        console.log('Connection ' + sessionId + ' closed');
-		viewer_count--;
+        console.log('Connection ' + sessionId.sessionId + '-' + sessionId.type + ' closed');
 		const serve = {
 			id : "serve2",
 			viewer_count : viewer_count,
@@ -104,8 +105,17 @@ wss.on('connection', function(ws) {
 			ip: argv.as_uri,
 			rooms: []
 		}
-		publisher.publish("serve2-count", JSON.stringify(serve))
-        stop(sessionId);
+		if(sessionId.type && sessionId.type == 'viewer'){
+			viewer_count--;
+			serve.viewer_count = viewer_count
+			publisher.publish("serve2-count", JSON.stringify(serve))
+		}
+		if(sessionId.type && sessionId.type == 'presenter'){
+			presenter_count--;
+			serve.presenter_count = presenter_count
+			publisher.publish("serve2-count", JSON.stringify(serve))
+		}
+        stop(sessionId.sessionId);
     });
 
     ws.on('message', function(_message) {
@@ -114,7 +124,8 @@ wss.on('connection', function(ws) {
 
         switch (message.id) {
         case 'presenter':
-			startPresenter(sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
+			startPresenter(sessionId.sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
+				sessionId.type = 'presenter';
 				if (error) {
 					// return ws.send(JSON.stringify({
 					// 	id : 'presenterResponse',
@@ -143,7 +154,8 @@ wss.on('connection', function(ws) {
 			break;
 
         case 'viewer':
-			startViewer(sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
+			startViewer(sessionId.sessionId, ws, message.sdpOffer, function(error, sdpAnswer) {
+				sessionId.type = 'viewer';
 				if (error) {
 					console.log("loi cmnr");
 					return ws.send(JSON.stringify({
@@ -183,11 +195,11 @@ wss.on('connection', function(ws) {
 			break;
 
         case 'stop':
-            stop(sessionId);
+            stop(sessionId.sessionId);
             break;
 
         case 'onIceCandidate':
-            onIceCandidate(sessionId, message.candidate);
+            onIceCandidate(sessionId.sessionId, message.candidate);
             break;
 
         default:
@@ -225,11 +237,11 @@ function getKurentoClient(callback) {
 async function getCandidate() {
 	const browser = await puppeteer.launch({ headless: true, args: ['--ignore-certificate-errors'] });
 	const page = await (await browser.pages())[0]
-	await page.addScriptTag({ url: "https://192.168.1.25:9000/js/kurento-utils.js" });
+	await page.addScriptTag({ url: "https://192.168.1.25:10000/js/kurento-utils.js" });
 	page.on('console', message => console.log(message.text()))
 	const info = await page.evaluate(async () => {
 		(function(){
-			var ws = new WebSocket('wss://192.168.1.25:9000/one2many');
+			var ws = new WebSocket('wss://192.168.1.25:10000/one2many');
 			var webRtcPeer;
 			ws.onmessage = function (message) {
 				var parsedMessage = JSON.parse(message.data);
@@ -276,7 +288,7 @@ async function getCandidate() {
 				const stream =  e.detail.stream;
 				presenter(stream);
 			});
-			var ws = new WebSocket('wss://192.168.1.25:10000/one2many');
+			var ws = new WebSocket('wss://192.168.1.25:11000/one2many');
 			var webRtcPeer;
 
 			window.onbeforeunload = function () {
@@ -721,14 +733,6 @@ subscriber.on("message", function (channel, message) {
 				});
 			});
 			break;
-		// case 'onIceCandidate':
-		// 	console.log("Zoooo")
-		// 	onIceCandidate(sessionIdRedis, JSON.parse(message));
-		// 	break;
-
-		// case 'stop':
-		// 	stop(sessionIdRedis);
-		// 	break;
 		default:
 			break;
 	}
